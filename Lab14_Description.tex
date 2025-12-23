@@ -1,0 +1,558 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+
+\geometry{margin=1in}
+
+% Code styling
+\definecolor{codebackground}{RGB}{26, 26, 46}
+\definecolor{codepink}{RGB}{255, 105, 180}
+\definecolor{codegreen}{RGB}{76, 175, 80}
+\definecolor{codecomment}{RGB}{128, 128, 128}
+
+\lstdefinestyle{reactstyle}{
+    backgroundcolor=\color{codebackground},
+    commentstyle=\color{codecomment},
+    keywordstyle=\color{codepink},
+    numberstyle=\tiny\color{codecomment},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize\color{white},
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{codepink}
+}
+
+\lstset{style=reactstyle}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Lab 14 - Book Dashboard App}
+\lhead{CS-344 Web Engineering}
+\cfoot{\thepage}
+
+\begin{document}
+
+% Title Page
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\bfseries Department of Computing\par}
+    \vspace{1cm}
+    {\Large CS-344: Web Engineering\par}
+    \vspace{1.5cm}
+    
+    {\huge\bfseries Lab 14: Book Dashboard App\par}
+    \vspace{0.5cm}
+    {\Large State Management \& Context in React\par}
+    \vspace{2cm}
+    
+    \begin{tcolorbox}[colback=pink!10, colframe=pink!60, width=10cm]
+        \centering
+        \textbf{Class:} BESE-14AB \\
+        \textbf{Date:} 18.12.25 \\
+        \textbf{Instructor:} Ms. Naema Asif
+    \end{tcolorbox}
+    
+    \vfill
+    
+    {\large Student Name: [Your Name]\par}
+    {\large Registration No.: [Your Registration No.]\par}
+    {\large Section: BESE-14AB\par}
+    
+    \vfill
+    
+    {\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+This lab explores advanced React concepts focusing on state management with objects and arrays, and implementing global state using the Context API. The project builds a comprehensive Book Dashboard application that demonstrates real-world state management patterns.
+
+\subsection{Learning Objectives}
+\begin{itemize}
+    \item Manage objects and arrays in React state
+    \item Update nested state immutably using the spread operator
+    \item Create and use React Context for global state
+    \item Build role-based views (Admin vs User)
+    \item Implement CRUD operations
+\end{itemize}
+
+\section{Section 1: State with Objects}
+
+\subsection{Concept Overview}
+In React, when managing object state, we must update it immutably. This means creating a new object rather than modifying the existing one. The spread operator (\texttt{...}) helps achieve this.
+
+\subsection{Profile Editor Component}
+
+The Profile Editor demonstrates how to manage an object containing multiple properties (name and age) and update them independently.
+
+\begin{lstlisting}[language=JavaScript, caption=ProfileEditor Component]
+import React, { useState } from 'react';
+
+function ProfileEditor() {
+  // Initialize state with an object
+  const [profile, setProfile] = useState({
+    name: 'John Doe',
+    age: 25
+  });
+
+  // Update name while preserving other properties
+  const handleNameChange = (e) => {
+    setProfile({
+      ...profile,           // Copy existing properties
+      name: e.target.value  // Update only name
+    });
+  };
+
+  // Update age while preserving other properties
+  const handleAgeChange = (e) => {
+    setProfile({
+      ...profile,          // Copy existing properties
+      age: e.target.value  // Update only age
+    });
+  };
+
+  return (
+    <div>
+      <h2>Profile Editor</h2>
+      <input
+        type="text"
+        value={profile.name}
+        onChange={handleNameChange}
+      />
+      <input
+        type="number"
+        value={profile.age}
+        onChange={handleAgeChange}
+      />
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Key Takeaways}
+\begin{itemize}
+    \item The spread operator creates a shallow copy of the object
+    \item Only the specified property is updated
+    \item React detects the new object reference and triggers a re-render
+    \item This pattern prevents accidental property loss
+\end{itemize}
+
+\section{Section 2: Arrays of Objects}
+
+\subsection{Concept Overview}
+Managing arrays of objects requires careful handling to maintain immutability. Common operations include adding, removing, and updating items using array methods like \texttt{map()}, \texttt{filter()}, and the spread operator.
+
+\subsection{Todo List Component}
+
+The Todo List component demonstrates full CRUD operations on an array of todo objects.
+
+\begin{lstlisting}[language=JavaScript, caption=Todo List - Adding Items]
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, title: 'Learn React', completed: false }
+  ]);
+  
+  const [newTodo, setNewTodo] = useState('');
+
+  // Add new todo with unique ID
+  const handleAddTodo = (e) => {
+    e.preventDefault();
+    
+    const newTodoItem = {
+      id: Date.now(),      // Generate unique ID
+      title: newTodo,
+      completed: false
+    };
+    
+    // Create new array with existing and new item
+    setTodos([...todos, newTodoItem]);
+    setNewTodo('');        // Clear input
+  };
+  
+  // Rest of component...
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, caption=Todo List - Deleting Items]
+// Delete todo by filtering out the item with matching ID
+const handleDeleteTodo = (id) => {
+  setTodos(todos.filter(todo => todo.id !== id));
+};
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, caption=Todo List - Updating Items]
+// Toggle completed status
+const handleToggleComplete = (id) => {
+  setTodos(todos.map(todo => 
+    todo.id === id 
+      ? { ...todo, completed: !todo.completed }
+      : todo
+  ));
+};
+\end{lstlisting}
+
+\subsection{Key Array Operations}
+\begin{itemize}
+    \item \textbf{Add:} Use spread operator to create new array with added item
+    \item \textbf{Delete:} Use \texttt{filter()} to create array without the item
+    \item \textbf{Update:} Use \texttt{map()} to create array with updated item
+    \item \textbf{Unique IDs:} Use \texttt{Date.now()} for simple unique identifiers
+\end{itemize}
+
+\section{Section 3: Global State with Context}
+
+\subsection{Concept Overview}
+React Context solves the "prop drilling" problem by providing a way to share state across the entire component tree without passing props through every level.
+
+\subsection{Role Context Implementation}
+
+\begin{lstlisting}[language=JavaScript, caption=Creating Role Context]
+import React, { createContext, useContext, useState } from 'react';
+
+// Create context
+const RoleContext = createContext();
+
+// Custom hook for easy access
+export const useRole = () => {
+  const context = useContext(RoleContext);
+  if (!context) {
+    throw new Error('useRole must be used within RoleProvider');
+  }
+  return context;
+};
+
+// Provider component
+export const RoleProvider = ({ children }) => {
+  const [role, setRole] = useState('user');
+
+  const toggleRole = () => {
+    setRole(prevRole => 
+      prevRole === 'user' ? 'admin' : 'user'
+    );
+  };
+
+  const value = {
+    role,
+    toggleRole,
+    isAdmin: role === 'admin',
+    isUser: role === 'user'
+  };
+
+  return (
+    <RoleContext.Provider value={value}>
+      {children}
+    </RoleContext.Provider>
+  );
+};
+\end{lstlisting}
+
+\subsection{Using Context in Components}
+
+\begin{lstlisting}[language=JavaScript, caption=Role-Based Rendering]
+function BookCard({ book, onEdit, onDelete }) {
+  // Access context anywhere in the tree
+  const { isAdmin } = useRole();
+
+  return (
+    <div className="card">
+      <h3>{book.title}</h3>
+      <p>{book.author}</p>
+      
+      {/* Conditional rendering based on role */}
+      {isAdmin && (
+        <div>
+          <button onClick={() => onEdit(book)}>Edit</button>
+          <button onClick={() => onDelete(book.id)}>Delete</button>
+        </div>
+      )}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Context Benefits}
+\begin{itemize}
+    \item Eliminates prop drilling through multiple component levels
+    \item Centralized state management
+    \item Easy to add new consumers
+    \item Clean component interfaces
+\end{itemize}
+
+\section{Final Project: Book Dashboard}
+
+\subsection{Project Overview}
+The Book Dashboard combines all learned concepts into a complete application with full CRUD functionality, role-based access control, and search capabilities.
+
+\subsection{Main Features}
+
+\subsubsection{Book Management}
+\begin{itemize}
+    \item Display books in a responsive grid
+    \item Add new books (Admin only)
+    \item Edit existing books (Admin only)
+    \item Delete books with confirmation (Admin only)
+    \item Search books by title or author
+\end{itemize}
+
+\subsubsection{Role-Based Access}
+\begin{itemize}
+    \item \textbf{Admin Role:} Full CRUD access with visible action buttons
+    \item \textbf{User Role:} Read-only access, no action buttons shown
+    \item Global role switcher accessible from any component
+\end{itemize}
+
+\subsection{Dashboard Implementation}
+
+\begin{lstlisting}[language=JavaScript, caption=Book Dashboard Core Logic]
+function BookDashboard() {
+  const { isAdmin } = useRole();
+  
+  const [books, setBooks] = useState([
+    { id: 1, title: 'The Great Gatsby', 
+      author: 'F. Scott Fitzgerald', year: 1925 }
+  ]);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Add book
+  const handleAddBook = (newBook) => {
+    const bookWithId = {
+      ...newBook,
+      id: Date.now()
+    };
+    setBooks([...books, bookWithId]);
+  };
+
+  // Delete book
+  const handleDeleteBook = (id) => {
+    setBooks(books.filter(book => book.id !== id));
+  };
+
+  // Update book
+  const handleSaveEdit = (updatedBook) => {
+    setBooks(books.map(book => 
+      book.id === updatedBook.id ? updatedBook : book
+    ));
+  };
+
+  // Filter books
+  const filteredBooks = books.filter(book => 
+    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    book.author.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search books..."
+      />
+      
+      {isAdmin && (
+        <button onClick={handleAddBook}>Add Book</button>
+      )}
+      
+      {filteredBooks.map(book => (
+        <BookCard
+          key={book.id}
+          book={book}
+          onEdit={handleEditBook}
+          onDelete={handleDeleteBook}
+        />
+      ))}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Design Implementation}
+
+\subsection{Color Scheme}
+The application uses a dark theme with pink accents as specified:
+
+\begin{itemize}
+    \item \textbf{Primary Color:} Dark Light Pink (\#FF69B4)
+    \item \textbf{Background:} Dark Navy (\#1a1a2e)
+    \item \textbf{Surface:} Dark Blue (\#16213e)
+    \item \textbf{Text:} White/Light Gray
+\end{itemize}
+
+\subsection{CSS Variables}
+
+\begin{lstlisting}[language=CSS, caption=CSS Color Variables]
+:root {
+  --primary-color: #FF69B4;
+  --primary-light: #FFB6D9;
+  --primary-dark: #C71585;
+  --background: #1a1a2e;
+  --surface: #16213e;
+  --text-primary: #ffffff;
+  --border: #0f3460;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+\end{lstlisting}
+
+\section{Key Concepts Summary}
+
+\subsection{Why Use the Spread Operator?}
+
+The spread operator is essential for maintaining immutability in React:
+
+\begin{enumerate}
+    \item \textbf{Immutability:} Creates new references, allowing React to detect changes
+    \item \textbf{Prevents Bugs:} Avoids accidental mutations of existing state
+    \item \textbf{Performance:} Enables React's optimization through reference comparison
+    \item \textbf{Predictability:} Makes state updates explicit and traceable
+\end{enumerate}
+
+\subsection{Problems Context Solves}
+
+\begin{enumerate}
+    \item \textbf{Prop Drilling:} Eliminates passing props through multiple levels
+    \item \textbf{Code Duplication:} Centralized state reduces redundant code
+    \item \textbf{Maintainability:} Changes to shared state in one place
+    \item \textbf{Component Coupling:} Reduces dependencies between parent-child components
+\end{enumerate}
+
+\subsection{Benefits of Component Splitting}
+
+\begin{enumerate}
+    \item \textbf{Reusability:} Components can be used in multiple places
+    \item \textbf{Testability:} Smaller components are easier to test
+    \item \textbf{Readability:} Clear separation of concerns
+    \item \textbf{Maintainability:} Changes isolated to specific components
+\end{enumerate}
+
+\section{Project Structure}
+
+\begin{verbatim}
+book-dashboard-app/
+├── src/
+│   ├── components/
+│   │   ├── Section1/
+│   │   │   └── ProfileEditor.jsx
+│   │   ├── Section2/
+│   │   │   └── TodoList.jsx
+│   │   ├── Section3/
+│   │   │   ├── RoleSwitcher.jsx
+│   │   │   └── BookListBasic.jsx
+│   │   └── BookDashboard/
+│   │       ├── BookDashboard.jsx
+│   │       ├── BookCard.jsx
+│   │       ├── AddBookForm.jsx
+│   │       └── EditBookModal.jsx
+│   ├── contexts/
+│   │   └── RoleContext.jsx
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── index.html
+├── package.json
+└── README.md
+\end{verbatim}
+
+\section{Running the Application}
+
+\subsection{Installation}
+
+\begin{verbatim}
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+\end{verbatim}
+
+\subsection{Features Demonstration}
+
+\begin{enumerate}
+    \item \textbf{Profile Editor:} Edit name and age to see object state updates
+    \item \textbf{Todo List:} Add, edit, complete, and delete todos
+    \item \textbf{Role Switcher:} Toggle between Admin and User modes
+    \item \textbf{Book Dashboard:} 
+    \begin{itemize}
+        \item As Admin: Add, edit, and delete books
+        \item As User: Browse books in read-only mode
+        \item Search functionality works in both modes
+    \end{itemize}
+\end{enumerate}
+
+\section{Conclusion}
+
+This lab successfully demonstrates core React state management concepts:
+
+\begin{itemize}
+    \item Managing complex state with objects and arrays
+    \item Immutable updates using the spread operator
+    \item Global state management with Context API
+    \item Role-based conditional rendering
+    \item Complete CRUD operations
+    \item Modern UI design with custom theming
+\end{itemize}
+
+The Book Dashboard combines these concepts into a practical, real-world application that showcases professional React development patterns.
+
+\section{Learning Outcomes Achieved}
+
+\begin{enumerate}
+    \item Successfully implemented object state management with immutable updates
+    \item Mastered array manipulation operations (add, delete, update)
+    \item Created and consumed React Context for global state
+    \item Built role-based access control system
+    \item Developed a complete, functional book management application
+    \item Applied modern CSS styling with custom color schemes
+    \item Structured a scalable React application
+\end{enumerate}
+
+\vfill
+
+\begin{center}
+\textbf{End of Document}
+
+\vspace{1cm}
+
+CS-344 Web Engineering \\
+Department of Computing \\
+Lab 14: Book Dashboard App
+\end{center}
+
+\end{document}
+
